@@ -8,13 +8,16 @@ class HTTPRequest(object):
     r"(/(\w*)?)*" \
     r"(\?(\w*=\w*&?)*)?"
 
-    def __init__(self, method: str, path: str, version: str):
+    def __init__(
+        self, method: str, path: str, version: str, headers = [],
+        params = [], body = None
+    ):
         self.__method = method
         self.__path = path
         self.__version = version
-        self.__headers = dict()
-        self.__params = []
-        self.__body = None
+        self.__headers = headers
+        self.__params = params
+        self.__body = body
 
     @staticmethod
     def examine_request(request: bytes, encoding = 'utf-8'):
@@ -22,6 +25,9 @@ class HTTPRequest(object):
         Takes an HTTP Request as parameter, and returns a dictionary containing
         the informations about the request, including a 
         '''
+        if not isinstance(request, bytes):
+            request = request.encode(encoding)
+        
         head = request.rsplit(b'\n')
         line = iter(head)
         rqline = next(line)
@@ -29,7 +35,7 @@ class HTTPRequest(object):
         rq = HTTPRequest(
             rqline.rsplit(b' ')[0].decode(encoding),
             rqline.rsplit(b' ')[1].rsplit(b'?')[0].decode(encoding),
-            rqline.rsplit(b' ')[2].decode(encoding)
+            rqline.rsplit(b' ')[2].replace(b'\r', b'').decode(encoding)
         )
         
         if re.search(br'\?((\w*=\w*)&?)+', rqline.rsplit(b' ')[1]):
@@ -40,7 +46,7 @@ class HTTPRequest(object):
         
         header = next(line)
         while header.replace(b'\r', b''):
-            rq.__headers.__setitem__(*header.decode(encoding).split(': '))
+            rq.add_header(*header.decode(encoding).split(': '))
             header = next(line)
         
         rq.__body = b'\n'.join(line)
@@ -67,5 +73,26 @@ class HTTPRequest(object):
     def headers(self):
         return self.__headers
     
+    def add_header(self, title, value):
+        self.__headers.append((title, value))
+    
     def get_header(self, header_name):
         return self.__headers.get(header_name, None)
+    
+    def __str__(self):
+        requestline = ' '.join([self.__method, self.__path, self.__version])
+        headers = '\n'.join(
+            header for header in (': '.join(x) for x in self.__headers())
+        )
+        return '\n'.join([requestline, headers])+'\n\n'+self.__body.decode()
+    
+    def __repr__(self):
+        return "{}({}, {}, {}, {}, {}, {})".format(
+            self.__class__.__name__,
+            self.__method.__repr__(),
+            self.__path.__repr__(),
+            self.__version.__repr__(),
+            self.__headers.__repr__(),
+            self.__params.__repr__(),
+            self.__body.__repr__()
+        )
