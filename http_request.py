@@ -62,10 +62,6 @@ class HTTPRequest(object):
         return self.__path
     
     @property
-    def query_string(self):
-        return query_string
-    
-    @property
     def body(self):
         return self.__body
     
@@ -78,6 +74,12 @@ class HTTPRequest(object):
     
     def get_header(self, header_name):
         return self.__headers.get(header_name, None)
+    
+    def cookies(self):
+        cookies = self.__headers.get('Cookie')
+        if cookies:
+            return dict([c.split('=') for c in cookies.split('; ')])
+        return None
     
     def __str__(self):
         requestline = ' '.join([self.__method, self.__path, self.__version])
