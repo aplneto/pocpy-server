@@ -22,8 +22,8 @@ class HTTPRequest(object):
     @staticmethod
     def examine_request(request: bytes, encoding = 'utf-8'):
         '''
-        Takes an HTTP Request as parameter, and returns a dictionary containing
-        the informations about the request, including a 
+        Takes an HTTP Request as parameter, and returns a HTTPRequest object
+        containing the informations about the request 
         '''
         if not isinstance(request, bytes):
             request = request.encode(encoding)
