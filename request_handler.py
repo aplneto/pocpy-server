@@ -3,7 +3,7 @@ import threading
 from site_tree import WebPage
 from http_request import HTTPRequest
 
-class ClientResponser(threading.Thread):
+class SessionHandler(threading.Thread):
     def __init__(self, client: socket.socket, index: WebPage):
         threading.Thread.__init__(self)
         self.__client = client
@@ -27,8 +27,10 @@ class ClientResponser(threading.Thread):
             except:
                 continue
             else:
-                request_object = HTTPRequest.examine_request(request)
-                response_body = self.__parent(request_object)
+                pass
+    
+    def start_session(self):
+        
             
     def __bool__(self):
         return self.alive
